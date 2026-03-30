@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tamil Nadu CM Vote 2026</title>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, runTransaction, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    // ─── REPLACE WITH YOUR FIREBASE CONFIG ───────────────────────────────────
+    
+    const firebaseConfig = {
+  apiKey: "AIzaSyCWjCjepcK_AtIwlwN9N9REiNoNyr8IinA",
+  authDomain: "tn-voting-aca55.firebaseapp.com",
+  projectId: "tn-voting-aca55",
+  storageBucket: "tn-voting-aca55.firebasestorage.app",
+  messagingSenderId: "867862711872",
+  appId: "1:867862711872:web:2cf9f588a5eb50c0f299a5",
+  measurementId: "G-LXF8RLF2GF"
+};
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const app = initializeApp(firebaseConfig);
+    const db  = getDatabase(app);
+    const auth = getAuth(app);
+
+    const CANDIDATES = ["candidate1","candidate2","candidate3","candidate4"];
+    let currentUser = null;
+    let confirmationResult = null;
+
+    // ── Auth State Listener ───────────────────────────────────────────────────
+    onValue(ref(db, "votes"), snap => { /* Handled below in Live results */ });
+
+    onAuthStateChanged(auth, (user) => {
+      const authBtn = document.getElementById("auth-nav-btn");
+      if (user) {
+        currentUser = user;
+        authBtn.textContent = "Log Out";
+        authBtn.onclick = () => signOut(auth);
+        checkUserVote(user.uid);
+      } else {
+        currentUser = null;
+        authBtn.textContent = "Login to Vote";
+        authBtn.onclick = openAuthModal;
+        unlockAllCards();
+      }
+    });
+
+    // ── Check Database for existing vote ──────────────────────────────────────
+    function checkUserVote(uid) {
+      const userRef = ref(db, `users/${uid}/voted`);
+      onValue(userRef, (snap) => {
+        const votedFor = snap.val();
+        if (votedFor) {
+          lockAllCards(votedFor);
+        } else {
+          unlockAllCards();
+        }
+      });
+    }
+
+    // ── Phone Auth Logic ──────────────────────────────────────────────────────
+    window.openAuthModal = function() {
+      document.getElementById("auth-modal").classList.add("show");
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'normal',
+          'callback': (response) => {
+             // reCAPTCHA solved
+          }
+        });
+        window.recaptchaVerifier.render();
+      }
+    };
+
+    window.closeAuthModal = function() {
+      document.getElementById("auth-modal").classList.remove("show");
+      // Reset form UI
+      document.getElementById("phone-number").style.display = 'block';
+      document.getElementById("send-otp-btn").style.display = 'block';
+      document.getElementById("otp-code").style.display = 'none';
+      document.getElementById("verify-otp-btn").style.display = 'none';
+      document.getElementById("recaptcha-container").style.display = 'block';
+    };
+
+    window.sendOTP = function() {
+      const phoneNumber = document.getElementById("phone-number").value.trim();
+      if (!phoneNumber) {
+        showToast("Please enter a phone number", "warn");
+        return;
+      }
+      
+      const appVerifier = window.recaptchaVerifier;
+      document.getElementById("send-otp-btn").disabled = true;
+      document.getElementById("send-otp-btn").textContent = "Sending...";
+
+      signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+        .then((result) => {
+          confirmationResult = result;
+          document.getElementById("phone-number").style.display = 'none';
+          document.getElementById("send-otp-btn").style.display = 'none';
+          document.getElementById("recaptcha-container").style.display = 'none';
+          
+          document.getElementById("otp-code").style.display = 'block';
+          document.getElementById("verify-otp-btn").style.display = 'block';
+          showToast("OTP sent to your phone!", "success");
+        }).catch((error) => {
+          console.error(error);
+          showToast("Error sending OTP. Try again.", "error");
+          document.getElementById("send-otp-btn").disabled = false;
+          document.getElementById("send-otp-btn").textContent = "Send OTP";
+          if (window.recaptchaVerifier) window.recaptchaVerifier.render().then(wId => grecaptcha.reset(wId));
+        });
+    };
+
+    window.verifyOTP = function() {
+      const code = document.getElementById("otp-code").value.trim();
+      if (!code) return;
+
+      document.getElementById("verify-otp-btn").disabled = true;
+      document.getElementById("verify-otp-btn").textContent = "Verifying...";
+
+      confirmationResult.confirm(code).then((result) => {
+        closeAuthModal();
+        showToast("Logged in successfully!", "success");
+      }).catch((error) => {
+        showToast("Invalid OTP. Try again.", "error");
+        document.getElementById("verify-otp-btn").disabled = false;
+        document.getElementById("verify-otp-btn").textContent = "Verify OTP";
+      });
+    };
+
+    // ── Initialize missing nodes ──────────────────────────────────────────────
+    CANDIDATES.forEach(id => {
+      const r = ref(db, `votes/${id}`);
+      onValue(r, snap => {
+        if (snap.val() === null) runTransaction(r, () => 0);
+      }, { onlyOnce: true });
+    });
+
+    // ── Cast vote ─────────────────────────────────────────────────────────────
+    window.castVote = async function(candidateId) {
+      if (!currentUser) {
+        showToast("Please login to cast your vote.", "warn");
+        openAuthModal();
+        return;
+      }
+
+      const btn = document.querySelector(`[data-id="${candidateId}"] .vote-btn`);
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+
+      const userRef = ref(db, `users/${currentUser.uid}/voted`);
+      
+      try {
+        const snapshot = await get(userRef);
+        if (snapshot.exists()) {
+          showToast("You have already cast your vote!", "warn");
+          lockAllCards(snapshot.val());
+          return;
+        }
+
+        // 1. Record the user's vote
+        await set(userRef, candidateId);
+        
+        // 2. Increment candidate vote count
+        await runTransaction(ref(db, `votes/${candidateId}`), current => (current || 0) + 1);
+        
+        lockAllCards(candidateId);
+        showToast("✅ Your vote has been recorded!", "success");
+
+      } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.textContent = "Cast Vote";
+        showToast("Error processing vote. Please try again.", "error");
+      }
+    };
+
+    // ── Live results listener ─────────────────────────────────────────────────
+    onValue(ref(db, "votes"), snap => {
+      const data = snap.val() || {};
+      const counts = {};
+      let total = 0;
+      CANDIDATES.forEach(id => { counts[id] = data[id] || 0; total += counts[id]; });
+      CANDIDATES.forEach(id => {
+        const pct = total > 0 ? Math.round((counts[id] / total) * 100) : 0;
+        const el  = document.getElementById(`count-${id}`);
+        const bar = document.getElementById(`bar-${id}`);
+        const pctEl= document.getElementById(`pct-${id}`);
+        if (el)    el.textContent  = counts[id].toLocaleString();
+        if (bar)   bar.style.width = pct + "%";
+        if (pctEl) pctEl.textContent = pct + "%";
+      });
+      const totalEl = document.getElementById("total-votes");
+      if (totalEl) totalEl.textContent = total.toLocaleString();
+
+      // crown the leader
+      const leader = CANDIDATES.reduce((a,b) => counts[a] >= counts[b] ? a : b);
+      document.querySelectorAll(".candidate-card").forEach(c => c.classList.remove("leader"));
+      if (total > 0) document.querySelector(`[data-id="${leader}"]`)?.classList.add("leader");
+    });
+
+    // ── UI Helpers ────────────────────────────────────────────────────────────
+    window.lockAllCards = function(votedId) {
+      document.querySelectorAll(".candidate-card").forEach(card => {
+        const id  = card.dataset.id;
+        const btn = card.querySelector(".vote-btn");
+        if (id === votedId) {
+          btn.textContent = "✔ Voted";
+          btn.classList.add("voted");
+        } else {
+          btn.textContent = "Locked";
+          btn.classList.remove("voted");
+        }
+        btn.disabled = true;
+      });
+    }
+
+    window.unlockAllCards = function() {
+      document.querySelectorAll(".candidate-card").forEach(card => {
+        const btn = card.querySelector(".vote-btn");
+        btn.textContent = "Cast Vote";
+        btn.classList.remove("voted");
+        btn.disabled = false;
+      });
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.className = "toast show " + type;
+      setTimeout(() => t.className = "toast", 3000);
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ── Reset & Tokens ───────────────────────────────────────────────────── */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    :root {
+      --gold:       #c8922a;
+      --gold-light: #f0c05a;
+      --saffron:    #ff6f00;
+      --green-tn:   #1a6b3c;
+      --dark:       #0c0c10;
+      --dark-2:     #141418;
+      --dark-3:     #1e1e24;
+      --surface:    #242430;
+      --text:       #f0ede8;
+      --muted:      #8a8795;
+      --border:     rgba(200,146,42,.18);
+      --glow:       rgba(200,146,42,.25);
+      --ff-display: 'Cormorant Garamond', serif;
+      --ff-body:    'DM Sans', sans-serif;
+      --radius:     16px;
+      --radius-lg:  24px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: var(--ff-body);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .5;
+    }
+
+    /* ── Header / Hero ───────────────────────────────────────────────────── */
+    .hero {
+      position: relative; height: 100vh; min-height: 600px;
+      display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+    }
+
+    .hero-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #0c0c10 0%, #1a0a00 60%, #0c0c10 100%); }
+    .hero-img { position: absolute; inset: 0; background: url('main.jpg') center/cover no-repeat; opacity: .22; filter: sepia(.4) contrast(1.1); }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,12,16,1) 0%, rgba(12,12,16,.65) 40%, rgba(12,12,16,.1) 100%); }
+
+    .particles { position: absolute; inset: 0; pointer-events: none; }
+    .particle {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: var(--gold-light);
+      animation: float var(--dur,8s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: 0;
+    }
+    @keyframes float {
+      0%   { transform: translateY(100vh) translateX(0);   opacity: 0; }
+      10%  { opacity: .6; }
+      90%  { opacity: .4; }
+      100% { transform: translateY(-10vh) translateX(var(--drift,20px)); opacity: 0; }
+    }
+
+    .hero-content { position: relative; z-index: 2; padding: 0 6vw 8vh; max-width: 900px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
+      color: var(--gold); font-weight: 600; margin-bottom: 1.2rem;
+    }
+    .eyebrow::before { content: ''; display: block; width: 32px; height: 1.5px; background: var(--gold); }
+
+    .hero h1 { font-family: var(--ff-display); font-size: clamp(2.8rem, 6vw, 5.5rem); font-weight: 700; line-height: 1.06; color: var(--text); margin-bottom: 1rem; }
+    .hero h1 span { background: linear-gradient(135deg, var(--gold-light), var(--saffron)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 1.05rem; color: var(--muted); max-width: 540px; line-height: 1.65; margin-bottom: 2.4rem; }
+    .hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .stat-pill { background: rgba(200,146,42,.1); border: 1px solid var(--border); border-radius: 100px; padding: .45rem 1.1rem; font-size: .82rem; color: var(--gold-light); display: flex; align-items: center; gap: .5rem; }
+    .stat-pill strong { color: #fff; }
+
+    .scroll-cue {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 3;
+      display: flex; flex-direction: column; align-items: center; gap: .4rem;
+      color: var(--muted); font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    .scroll-cue svg { width: 20px; opacity: .5; }
+    @keyframes bounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
+
+    /* ── Section wrapper ─────────────────────────────────────────────────── */
+    .section { padding: 6rem 6vw; position: relative; z-index: 1; }
+    .section-label { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: .7rem; display: flex; align-items: center; gap: .6rem; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
+    .section-title { font-family: var(--ff-display); font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 700; margin-bottom: .6rem; }
+    .section-desc { color: var(--muted); font-size: .95rem; max-width: 500px; line-height: 1.65; margin-bottom: 3rem; }
+
+    /* ── Candidates grid ─────────────────────────────────────────────────── */
+    .candidates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.6rem; }
+    .candidate-card { background: var(--dark-2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; cursor: default; position: relative; }
+    .candidate-card:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px var(--gold); }
+    .candidate-card.leader { border-color: var(--gold); box-shadow: 0 0 40px var(--glow); }
+    .candidate-card.leader::before { content: '👑 Leading'; position: absolute; top: 14px; right: 14px; background: linear-gradient(135deg, var(--gold), var(--saffron)); color: #0c0c10; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .75rem; border-radius: 100px; z-index: 10; }
+
+    .card-photo { width: 100%; aspect-ratio: 4/4.5; background: var(--dark-3); overflow: hidden; position: relative; }
+    .card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform .5s ease; filter: grayscale(.15); }
+    .candidate-card:hover .card-photo img { transform: scale(1.04); }
+    .card-photo-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,12,16,.85) 0%, transparent 55%); }
+    .party-badge { position: absolute; bottom: 14px; left: 14px; background: rgba(12,12,16,.75); border: 1px solid var(--border); backdrop-filter: blur(8px); border-radius: 8px; padding: .3rem .7rem; font-size: .7rem; color: var(--gold-light); letter-spacing: .08em; font-weight: 500; }
+
+    .card-body { padding: 1.4rem 1.4rem 1rem; }
+    .candidate-name { font-family: var(--ff-display); font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-bottom: .25rem; }
+    .candidate-role { font-size: .78rem; color: var(--muted); margin-bottom: 1.1rem; }
+
+    .vote-bar-wrap { margin-bottom: 1rem; }
+    .vote-bar-header { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: .45rem; }
+    .vote-bar-header .vote-count { color: var(--text); font-weight: 600; }
+    .vote-bar-header .vote-pct { color: var(--gold); font-weight: 600; }
+    .vote-bar-track { height: 5px; border-radius: 100px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .vote-bar-fill { height: 100%; border-radius: 100px; width: 0%; background: linear-gradient(90deg, var(--gold), var(--saffron)); transition: width .9s cubic-bezier(.25,.8,.25,1); box-shadow: 0 0 8px rgba(200,146,42,.5); }
+
+    .vote-btn { width: 100%; padding: .85rem; border: 1.5px solid var(--gold); border-radius: var(--radius); background: transparent; color: var(--gold-light); font-family: var(--ff-body); font-size: .85rem; font-weight: 600; letter-spacing: .06em; cursor: pointer; transition: background .25s, color .25s, transform .15s; margin-top: .6rem; }
+    .vote-btn:hover:not(:disabled) { background: linear-gradient(135deg, var(--gold), var(--saffron)); color: #0c0c10; transform: scale(1.01); }
+    .vote-btn:disabled { opacity: .5; cursor: not-allowed; }
+    .vote-btn.voted { background: linear-gradient(135deg, var(--green-tn), #27ae60); color: #fff; border-color: transparent; opacity: 1; }
+
+    /* ── Auth Modal ──────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+      z-index: 1000; display: none; align-items: center; justify-content: center; opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    
+    .modal-content {
+      background: var(--dark-2); padding: 2.5rem 2rem; border-radius: var(--radius-lg);
+      border: 1px solid var(--border); width: 90%; max-width: 400px; text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px var(--gold);
+    }
+    
+    .modal-content h3 { font-family: var(--ff-display); font-size: 2rem; color: var(--gold-light); margin-bottom: 0.5rem; }
+    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+    
+    .modal-input {
+      width: 100%; padding: 0.9rem; margin-bottom: 1rem; background: var(--dark-3);
+      border: 1px solid rgba(255,255,255,0.1); color: var(--text); border-radius: var(--radius);
+      font-family: var(--ff-body); font-size: 1rem; text-align: center; letter-spacing: 0.05em;
+    }
+    .modal-input:focus { outline: none; border-color: var(--gold); }
+    
+    .modal-btn {
+      width: 100%; padding: 0.9rem; background: linear-gradient(135deg, var(--gold), var(--saffron));
+      color: #0c0c10; font-family: var(--ff-body); font-size: 0.95rem; font-weight: 700;
+      border: none; border-radius: var(--radius); cursor: pointer; transition: transform 0.2s; margin-bottom: 0.8rem;
+    }
+    .modal-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .modal-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .modal-btn-cancel { background: transparent; color: var(--muted); border: 1px solid var(--muted); }
+    .modal-btn-cancel:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: var(--text); }
+    
+    #recaptcha-container { display: flex; justify-content: center; margin-bottom: 1rem; }
+
+    /* ── Live Results Panel ──────────────────────────────────────────────── */
+    .results-section { background: var(--dark-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .results-inner { max-width: 800px; margin: 0 auto; }
+    .total-badge { display: inline-flex; align-items: center; gap: .6rem; background: var(--dark-3); border: 1px solid var(--border); border-radius: var(--radius); padding: .8rem 1.4rem; margin-bottom: 2.5rem; }
+    .total-badge .label { font-size: .8rem; color: var(--muted); }
+    .total-badge .number { font-family: var(--ff-display); font-size: 2rem; font-weight: 700; color: var(--gold-light); }
+
+    .result-row { display: grid; grid-template-columns: 160px 1fr 70px; align-items: center; gap: 1.2rem; margin-bottom: 1.3rem; }
+    .result-name { font-size: .9rem; font-weight: 500; display: flex; align-items: center; gap: .7rem; }
+    .result-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
+    .result-bar-track { height: 10px; border-radius: 100px; background: rgba(255,255,255,.07); overflow: hidden; }
+    .result-bar-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 1s cubic-bezier(.25,.8,.25,1); }
+    
+    .r1 { background: linear-gradient(90deg, #c8922a, #f0c05a); }
+    .r2 { background: linear-gradient(90deg, #1a6b3c, #2ecc71); }
+    .r3 { background: linear-gradient(90deg, #1a3a8b, #4a90d9); }
+    .r4 { background: linear-gradient(90deg, #8b1a1a, #e74c3c); }
+
+    .result-count { font-size: .82rem; text-align: right; color: var(--muted); }
+    .result-count strong { display: block; color: var(--text); font-size: 1rem; }
+
+    /* ── Footer ──────────────────────────────────────────────────────────── */
+    footer { padding: 3rem 6vw; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-logo { font-family: var(--ff-display); font-size: 1.3rem; color: var(--gold-light); }
+    .footer-note { font-size: .75rem; color: var(--muted); max-width: 340px; line-height: 1.6; }
+
+    /* ── Nav & Components ────────────────────────────────────────────────── */
+    .live-dot { display: inline-flex; align-items: center; gap: .45rem; font-size: .72rem; color: #2ecc71; letter-spacing: .1em; text-transform: uppercase; }
+    .live-dot::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 0 rgba(46,204,113,.5); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,204,113,.5); } 70% { box-shadow: 0 0 0 8px rgba(46,204,113,0); } 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); } }
+
+    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: .9rem 1.8rem; border-radius: var(--radius); font-size: .9rem; box-shadow: 0 12px 40px rgba(0,0,0,.4); transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s; z-index: 9999; opacity: 0; pointer-events: none; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+    .toast.success { border-color: #2ecc71; color: #2ecc71; }
+    .toast.warn { border-color: var(--gold); color: var(--gold-light); }
+    .toast.error { border-color: #e74c3c; color: #e74c3c; }
+
+    .flag-stripe { height: 4px; background: linear-gradient(90deg, var(--saffron) 0%, var(--saffron) 33%, #fff 33%, #fff 66%, var(--green-tn) 66%); }
+
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 6vw; background: rgba(12,12,16,.8); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(200,146,42,.1); }
+    .nav-brand { font-family: var(--ff-display); font-size: 1.25rem; color: var(--gold-light); letter-spacing: .02em; }
+    .nav-brand span { color: var(--muted); font-size: .85em; }
+    
+    .nav-actions { display: flex; align-items: center; gap: 1.5rem; }
+    .auth-nav-btn { background: transparent; border: 1px solid var(--gold); color: var(--gold-light); padding: 0.4rem 1rem; border-radius: var(--radius); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .auth-nav-btn:hover { background: rgba(200,146,42,0.1); }
+
+    .disclaimer { background: rgba(255,111,0,.07); border: 1px solid rgba(255,111,0,.2); border-radius: var(--radius); padding: 1rem 1.4rem; font-size: .8rem; color: #ffa94d; margin-bottom: 3rem; display: flex; gap: .7rem; align-items: flex-start; }
+    .disclaimer svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Responsive ──────────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .result-row { grid-template-columns: 130px 1fr 56px; gap: .8rem; }
+      .candidates-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .hero-content { padding-bottom: 12vh; }
+      .nav-actions { gap: 1rem; }
+      .live-dot span { display: none; } /* Hide text on mobile */
+    }
+    @media (max-width: 420px) { .candidates-grid { grid-template-columns: 1fr; } }
+
+    /* ── Entrance animations ─────────────────────────────────────────────── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-up { animation: fadeUp .7s ease both; }
+    .delay-1 { animation-delay: .15s; }
+    .delay-2 { animation-delay: .3s; }
+    .delay-3 { animation-delay: .45s; }
+  </style>
+</head>
+<body>
+
+  <div class="flag-stripe"></div>
+
+  <nav>
+    <div class="nav-brand">TN Chief Minister Poll <span>2026</span></div>
+    <div class="nav-actions">
+      <div class="live-dot"><span>Live Results</span></div>
+      <button class="auth-nav-btn" id="auth-nav-btn">Loading...</button>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-img"></div>
+    <div class="hero-overlay"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="hero-content">
+      <div class="eyebrow fade-up">Tamil Nadu Assembly Election</div>
+      <h1 class="fade-up delay-1">
+        Who Will Lead<br/><span>Tamil Nadu</span><br/>in 2026?
+      </h1>
+      <p class="hero-sub fade-up delay-2">
+        Cast your vote securely using SMS authentication. Watch the results update in real-time. One vote per verified phone number.
+      </p>
+      <div class="hero-stats fade-up delay-3">
+        <div class="stat-pill">🗳 Total Votes <strong id="total-votes">0</strong></div>
+        <div class="stat-pill">⏱ Live Since 2025</div>
+        <div class="stat-pill">🔒 Verified via OTP</div>
+      </div>
+    </div>
+
+    <div class="scroll-cue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 5v14M5 12l7 7 7-7"/>
+      </svg>
+      Scroll
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-label">Cast Your Vote</div>
+    <h2 class="section-title">The Candidates</h2>
+    <p class="section-desc">Select your preferred Chief Ministerial candidate. Log in with your phone number to securely cast your single vote.</p>
+
+    <div class="disclaimer">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+      This is an unofficial public opinion poll. Phone numbers are securely handled by Firebase Auth and are not stored in plaintext or sold.
+    </div>
+
+    <div class="candidates-grid">
+      <div class="candidate-card" data-id="candidate1">
+        <div class="card-photo">
+          <img src="images 1.jpeg" alt="Candidate 1" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/c8922a?text=Candidate+1'"/>
+          <div class="card-photo-overlay"></div>
+          <div class="party-badge">TVK</div>
+        </div>
+        <div class="card-body">
+          <div class="candidate-name">Joseph Vijay Chandrasekar</div>
+          <div class="candidate-role"></div>
+          <div class="vote-bar-wrap">
+            <div class="vote-bar-header">
+              <span>Votes: <span class="vote-count" id="count-candidate1">0</span></span>
+              <span class="vote-pct" id="pct-candidate1">0%</span>
+            </div>
+            <div class="vote-bar-track"><div class="vote-bar-fill r1" id="bar-candidate1"></div></div>
+          </div>
+          <button class="vote-btn" onclick="castVote('candidate1')">Cast Vote</button>
+        </div>
+      </div>
+
+      <div class="candidate-card" data-id="candidate2">
+        <div class="card-photo">
+          <img src="image 2.jpeg" alt="Candidate 2" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/1a6b3c?text=Candidate+2'"/>
+          <div class="card-photo-overlay"></div>
+          <div class="party-badge">DMK</div>
+        </div>
+        <div class="card-body">
+          <div class="candidate-name">M.K Stalin</div>
+          
+          <div class="vote-bar-wrap">
+            <div class="vote-bar-header">
+              <span>Votes: <span class="vote-count" id="count-candidate2">0</span></span>
+              <span class="vote-pct" id="pct-candidate2">0%</span>
+            </div>
+            <div class="vote-bar-track"><div class="vote-bar-fill r2" id="bar-candidate2"></div></div>
+          </div>
+          <button class="vote-btn" onclick="castVote('candidate2')">Cast Vote</button>
+        </div>
+      </div>
+
+      <div class="candidate-card" data-id="candidate3">
+        <div class="card-photo">
+          <img src="image 3.jpg" alt="Candidate 3" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/1a3a8b?text=Candidate+3'"/>
+          <div class="card-photo-overlay"></div>
+          <div class="party-badge">ADMK</div>
+        </div>
+        <div class="card-body">
+          <div class="candidate-name">Eps</div>
+
+          <div class="vote-bar-wrap">
+            <div class="vote-bar-header">
+              <span>Votes: <span class="vote-count" id="count-candidate3">0</span></span>
+              <span class="vote-pct" id="pct-candidate3">0%</span>
+            </div>
+            <div class="vote-bar-track"><div class="vote-bar-fill r3" id="bar-candidate3"></div></div>
+          </div>
+          <button class="vote-btn" onclick="castVote('candidate3')">Cast Vote</button>
+        </div>
+      </div>
+
+      <div class="candidate-card" data-id="candidate4">
+        <div class="card-photo">
+          <img src="image 4.jpg" alt="Candidate 4" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/8b1a1a?text=Candidate+4'"/>
+          <div class="card-photo-overlay"></div>
+          <div class="party-badge">NTK</div>
+        </div>
+        <div class="card-body">
+          <div class="candidate-name">Seeman</div>
+
+          <div class="vote-bar-wrap">
+            <div class="vote-bar-header">
+              <span>Votes: <span class="vote-count" id="count-candidate4">0</span></span>
+              <span class="vote-pct" id="pct-candidate4">0%</span>
+            </div>
+            <div class="vote-bar-track"><div class="vote-bar-fill r4" id="bar-candidate4"></div></div>
+          </div>
+          <button class="vote-btn" onclick="castVote('candidate4')">Cast Vote</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section results-section">
+    <div class="results-inner">
+      <div class="section-label">Live Dashboard</div>
+      <h2 class="section-title">Real-Time Results</h2>
+      
+      <div class="total-badge">
+        <div><div class="label">Total Votes Cast</div><div class="number" id="total-votes-2">0</div></div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-name"><img src="1.png" alt="" class="result-avatar" onerror="this.style.background='#c8922a';this.src=''"/>Candidate One</div>
+        <div class="result-bar-track"><div class="result-bar-fill r1" id="bar2-candidate1"></div></div>
+        <div class="result-count"><strong id="count2-candidate1">0</strong><span id="pct2-candidate1">0%</span></div>
+      </div>
+      <div class="result-row">
+        <div class="result-name"><img src="2.png" alt="" class="result-avatar" onerror="this.style.background='#1a6b3c';this.src=''"/>Candidate Two</div>
+        <div class="result-bar-track"><div class="result-bar-fill r2" id="bar2-candidate2"></div></div>
+        <div class="result-count"><strong id="count2-candidate2">0</strong><span id="pct2-candidate2">0%</span></div>
+      </div>
+      <div class="result-row">
+        <div class="result-name"><img src="3.png" alt="" class="result-avatar" onerror="this.style.background='#1a3a8b';this.src=''"/>Candidate Three</div>
+        <div class="result-bar-track"><div class="result-bar-fill r3" id="bar2-candidate3"></div></div>
+        <div class="result-count"><strong id="count2-candidate3">0</strong><span id="pct2-candidate3">0%</span></div>
+      </div>
+      <div class="result-row">
+        <div class="result-name"><img src="4.png" alt="" class="result-avatar" onerror="this.style.background='#8b1a1a';this.src=''"/>Candidate Four</div>
+        <div class="result-bar-track"><div class="result-bar-fill r4" id="bar2-candidate4"></div></div>
+        <div class="result-count"><strong id="count2-candidate4">0</strong><span id="pct2-candidate4">0%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-content">
+      <h3>Verify Identity</h3>
+      <p>Log in with your phone number to vote securely.</p>
+      
+      <div id="recaptcha-container"></div>
+      
+      <input type="tel" id="phone-number" class="modal-input" placeholder="+91 9876543210" />
+      <button id="send-otp-btn" class="modal-btn" onclick="sendOTP()">Send OTP</button>
+
+      <input type="text" id="otp-code" class="modal-input" placeholder="Enter 6-digit OTP" style="display:none;" />
+      <button id="verify-otp-btn" class="modal-btn" onclick="verifyOTP()" style="display:none;">Verify OTP</button>
+      
+      <button class="modal-btn modal-btn-cancel" onclick="closeAuthModal()">Cancel</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">TN CM Poll 2026</div>
+    <div class="footer-note">An unofficial public opinion poll. Data stored securely in Firebase.</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function(){
+      const wrap = document.getElementById('particles');
+      for (let i = 0; i < 35; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.cssText = `
+          left:${Math.random()*100}%;
+          --dur:${6 + Math.random()*10}s;
+          --delay:${Math.random()*10}s;
+          --drift:${(Math.random()-0.5)*80}px;
+          width:${1+Math.random()*2}px;
+          height:${1+Math.random()*2}px;
+          opacity:${0.2+Math.random()*0.6};
+        `;
+        wrap.appendChild(p);
+      }
+    })();
+
+    const obs = new MutationObserver(() => {
+      let total = 0;
+      const counts = {};
+      ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
+        const v = parseInt(document.getElementById(`count-${id}`)?.textContent.replace(/,/g,'') || 0);
+        counts[id] = v; total += v;
+      });
+      ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
+        const pct = total > 0 ? Math.round((counts[id]/total)*100) : 0;
+        const b2 = document.getElementById(`bar2-${id}`);
+        const c2 = document.getElementById(`count2-${id}`);
+        const p2 = document.getElementById(`pct2-${id}`);
+        if (b2) b2.style.width = pct + '%';
+        if (c2) c2.textContent = counts[id].toLocaleString();
+        if (p2) p2.textContent = pct + '%';
+      });
+      const t2 = document.getElementById('total-votes-2');
+      if (t2) t2.textContent = total.toLocaleString();
+    });
+
+    ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
+      const el = document.getElementById(`count-${id}`);
+      if (el) obs.observe(el, { childList:true, characterData:true, subtree:true });
+    });
+    
+    const tv = document.getElementById('total-votes');
+    if (tv) obs.observe(tv, { childList:true, characterData:true, subtree:true });
+  </script>
+
+</body>
+</html>
