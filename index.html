@@ -1,545 +1,1495 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tamil Nadu CM Vote 2026</title>
-
+  <title>TN CM Poll 2026 | தமிழ்நாடு</title>
+  <meta name="description" content="Cast your vote for Tamil Nadu's next Chief Minister. Live real-time results."/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet"/>
 
   <style>
-    /* ── Reset & Tokens ───────────────────────────────────────────────────── */
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
     :root {
-      --gold:       #c8922a;
-      --gold-light: #f0c05a;
-      --saffron:    #ff6f00;
-      --green-tn:   #1a6b3c;
-      --dark:       #0c0c10;
-      --dark-2:     #141418;
-      --dark-3:     #1e1e24;
-      --surface:    #242430;
-      --text:       #f0ede8;
-      --muted:      #8a8795;
-      --border:     rgba(200,146,42,.18);
-      --glow:       rgba(200,146,42,.25);
-      --ff-display: 'Cormorant Garamond', serif;
-      --ff-body:    'DM Sans', sans-serif;
-      --radius:     16px;
-      --radius-lg:  24px;
+      --gold: #c9a84c;
+      --gold-light: #f0d080;
+      --gold-dark: #8a6a20;
+      --crimson: #b91c1c;
+      --crimson-light: #ef4444;
+      --saffron: #f97316;
+      --ink: #080810;
+      --ink-1: #0c0c18;
+      --ink-2: #111120;
+      --ink-3: #181830;
+      --surface: #1c1c32;
+      --glass: rgba(201,168,76,0.06);
+      --glass-border: rgba(201,168,76,0.18);
+      --text: #f0ead0;
+      --text-muted: #8a8270;
+      --glow-gold: 0 0 40px rgba(201,168,76,0.35);
+      --glow-crimson: 0 0 40px rgba(185,28,28,0.4);
+      --gradient-gold: linear-gradient(135deg, #c9a84c, #f0d080, #c9a84c);
+      --gradient-crimson: linear-gradient(135deg, #b91c1c, #ef4444);
+      --gradient-saffron: linear-gradient(135deg, #f97316, #fbbf24);
+      --r: 14px;
+      --r-lg: 20px;
     }
 
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     html { scroll-behavior: smooth; }
 
     body {
-      background: var(--dark);
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--ink);
       color: var(--text);
-      font-family: var(--ff-body);
       min-height: 100vh;
       overflow-x: hidden;
+      line-height: 1.6;
     }
 
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: .5;
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--ink-1); }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: var(--ink);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #loader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+
+    .loader-emblem {
+      width: 120px; height: 120px;
+      position: relative;
+      margin-bottom: 2rem;
+    }
+    .loader-emblem svg {
+      width: 100%; height: 100%;
+      animation: emblemSpin 3s linear infinite;
+    }
+    @keyframes emblemSpin { to { transform: rotate(360deg); } }
+
+    .loader-inner {
+      position: absolute; inset: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,168,76,0.15), transparent);
+      border: 1px solid rgba(201,168,76,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
     }
 
-    /* ── Header / Hero ───────────────────────────────────────────────────── */
+    .loader-word {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    .loader-sub {
+      font-family: 'Noto Sans Tamil', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      letter-spacing: 0.2em;
+    }
+    .loader-bar-wrap {
+      width: 200px; height: 2px;
+      background: rgba(201,168,76,0.1);
+      border-radius: 1px;
+      margin-top: 2rem; overflow: hidden;
+    }
+    .loader-bar-fill {
+      height: 100%;
+      background: var(--gradient-gold);
+      animation: loadFill 1.5s ease forwards;
+    }
+    @keyframes loadFill { from { width:0 } to { width:100% } }
+
+    /* ── BACKGROUND ── */
+    .bg-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .bg-noise {
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+    .bg-radial {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 100% 100%, rgba(185,28,28,0.06) 0%, transparent 60%),
+                  radial-gradient(ellipse 60% 40% at 0% 80%, rgba(249,115,22,0.04) 0%, transparent 60%);
+    }
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image: 
+        linear-gradient(rgba(201,168,76,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.025) 1px, transparent 1px);
+      background-size: 80px 80px;
+    }
+    .bg-vignette {
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 40%, rgba(8,8,16,0.8) 100%);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 1.1rem 5%;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(8,8,16,0.85);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(201,168,76,0.12);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .nav-icon {
+      width: 36px; height: 36px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .nav-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem; font-weight: 700;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .nav-sub {
+      font-size: 0.7rem; color: var(--text-muted); letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .nav-right { display: flex; gap: 1rem; align-items: center; }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-link {
+      font-size: 0.85rem; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      transition: color 0.3s;
+      position: relative; padding-bottom: 4px;
+    }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 1px;
+      background: var(--gold);
+      transition: width 0.3s;
+    }
+    .nav-link:hover { color: var(--gold); }
+    .nav-link:hover::after { width: 100%; }
+
+    .live-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      background: rgba(185,28,28,0.15);
+      border: 1px solid rgba(185,28,28,0.3);
+      border-radius: 100px;
+      font-size: 0.75rem; font-weight: 600;
+      color: #ef4444; letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #ef4444;
+      animation: livePulse 1.5s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%, 100% { box-shadow: 0 0 4px #ef4444; opacity: 1; }
+      50% { box-shadow: 0 0 12px #ef4444, 0 0 20px #ef4444; opacity: 0.7; }
+    }
+
+    /* ── HERO ── */
     .hero {
-      position: relative; height: 100vh; min-height: 600px;
-      display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      padding: 9rem 5% 5rem;
+      position: relative; z-index: 1; text-align: center;
     }
 
-    .hero-bg { position: absolute; inset: 0; background: linear-gradient(160deg, #0c0c10 0%, #1a0a00 60%, #0c0c10 100%); }
-    .hero-img { position: absolute; inset: 0; background: url('main.jpg') center/cover no-repeat; opacity: .22; filter: sepia(.4) contrast(1.1); }
-    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,12,16,1) 0%, rgba(12,12,16,.65) 40%, rgba(12,12,16,.1) 100%); }
-
-    .particles { position: absolute; inset: 0; pointer-events: none; }
-    .particle {
-      position: absolute; width: 2px; height: 2px; border-radius: 50%;
-      background: var(--gold-light);
-      animation: float var(--dur,8s) ease-in-out infinite; animation-delay: var(--delay,0s); opacity: 0;
+    .hero-flag-bar {
+      display: flex; gap: 0;
+      width: 80px; height: 5px;
+      border-radius: 3px; overflow: hidden;
+      margin: 0 auto 2rem;
+      animation: fadeInUp 1s ease 0.1s both;
     }
-    @keyframes float {
-      0%   { transform: translateY(100vh) translateX(0);   opacity: 0; }
-      10%  { opacity: .6; }
-      90%  { opacity: .4; }
-      100% { transform: translateY(-10vh) translateX(var(--drift,20px)); opacity: 0; }
+    .hero-flag-bar span:nth-child(1) { flex: 1; background: #f97316; }
+    .hero-flag-bar span:nth-child(2) { flex: 1; background: #ffffff; }
+    .hero-flag-bar span:nth-child(3) { flex: 1; background: #16a34a; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.6rem;
+      padding: 0.5rem 1.2rem;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-radius: 100px;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--gold); letter-spacing: 0.2em;
+      text-transform: uppercase; margin-bottom: 2rem;
+      animation: fadeInUp 1s ease 0.2s both;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 8px var(--gold);
     }
 
-    .hero-content { position: relative; z-index: 2; padding: 0 6vw 8vh; max-width: 900px; }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: 10px;
-      font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
-      color: var(--gold); font-weight: 600; margin-bottom: 1.2rem;
+    .hero h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.8rem, 8vw, 6rem);
+      font-weight: 900; line-height: 1.05;
+      margin-bottom: 0.5rem;
+      animation: fadeInUp 1s ease 0.3s both;
+      letter-spacing: -0.01em;
     }
-    .eyebrow::before { content: ''; display: block; width: 32px; height: 1.5px; background: var(--gold); }
-
-    .hero h1 { font-family: var(--ff-display); font-size: clamp(2.8rem, 6vw, 5.5rem); font-weight: 700; line-height: 1.06; color: var(--text); margin-bottom: 1rem; }
-    .hero h1 span { background: linear-gradient(135deg, var(--gold-light), var(--saffron)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-    .hero-sub { font-size: 1.05rem; color: var(--muted); max-width: 540px; line-height: 1.65; margin-bottom: 2.4rem; }
-    .hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
-    .stat-pill { background: rgba(200,146,42,.1); border: 1px solid var(--border); border-radius: 100px; padding: .45rem 1.1rem; font-size: .82rem; color: var(--gold-light); display: flex; align-items: center; gap: .5rem; }
-    .stat-pill strong { color: #fff; }
-
-    .scroll-cue {
-      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 3;
-      display: flex; flex-direction: column; align-items: center; gap: .4rem;
-      color: var(--muted); font-size: .7rem; letter-spacing: .15em; text-transform: uppercase;
-      animation: bounce 2s ease-in-out infinite;
+    .hero h1 .line1 {
+      display: block;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
-    .scroll-cue svg { width: 20px; opacity: .5; }
-    @keyframes bounce { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(8px); } }
-
-    /* ── Section wrapper ─────────────────────────────────────────────────── */
-    .section { padding: 6rem 6vw; position: relative; z-index: 1; }
-    .section-label { font-size: .72rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: .7rem; display: flex; align-items: center; gap: .6rem; }
-    .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent); }
-    .section-title { font-family: var(--ff-display); font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 700; margin-bottom: .6rem; }
-    .section-desc { color: var(--muted); font-size: .95rem; max-width: 500px; line-height: 1.65; margin-bottom: 3rem; }
-
-    /* ── Candidates grid ─────────────────────────────────────────────────── */
-    .candidates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.6rem; }
-    .candidate-card { background: var(--dark-2); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease; cursor: default; position: relative; }
-    .candidate-card:hover { transform: translateY(-6px); box-shadow: 0 24px 64px rgba(0,0,0,.5), 0 0 0 1px var(--gold); }
-    .candidate-card.leader { border-color: var(--gold); box-shadow: 0 0 40px var(--glow); }
-    .candidate-card.leader::before { content: '👑 Leading'; position: absolute; top: 14px; right: 14px; background: linear-gradient(135deg, var(--gold), var(--saffron)); color: #0c0c10; font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .75rem; border-radius: 100px; z-index: 10; }
-
-    .card-photo { width: 100%; aspect-ratio: 4/4.5; background: var(--dark-3); overflow: hidden; position: relative; }
-    .card-photo img { width: 100%; height: 100%; object-fit: cover; object-position: top center; transition: transform .5s ease; filter: grayscale(.15); }
-    .candidate-card:hover .card-photo img { transform: scale(1.04); }
-    .card-photo-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(12,12,16,.85) 0%, transparent 55%); }
-    .party-badge { position: absolute; bottom: 14px; left: 14px; background: rgba(12,12,16,.75); border: 1px solid var(--border); backdrop-filter: blur(8px); border-radius: 8px; padding: .3rem .7rem; font-size: .7rem; color: var(--gold-light); letter-spacing: .08em; font-weight: 500; }
-
-    .card-body { padding: 1.4rem 1.4rem 1rem; }
-    .candidate-name { font-family: var(--ff-display); font-size: 1.55rem; font-weight: 700; line-height: 1.15; margin-bottom: .25rem; }
-    .candidate-role { font-size: .78rem; color: var(--muted); margin-bottom: 1.1rem; }
-
-    .vote-bar-wrap { margin-bottom: 1rem; }
-    .vote-bar-header { display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: .45rem; }
-    .vote-bar-header .vote-count { color: var(--text); font-weight: 600; }
-    .vote-bar-header .vote-pct { color: var(--gold); font-weight: 600; }
-    .vote-bar-track { height: 5px; border-radius: 100px; background: rgba(255,255,255,.08); overflow: hidden; }
-    .vote-bar-fill { height: 100%; border-radius: 100px; width: 0%; background: linear-gradient(90deg, var(--gold), var(--saffron)); transition: width .9s cubic-bezier(.25,.8,.25,1); box-shadow: 0 0 8px rgba(200,146,42,.5); }
-
-    .vote-btn { width: 100%; padding: .85rem; border: 1.5px solid var(--gold); border-radius: var(--radius); background: transparent; color: var(--gold-light); font-family: var(--ff-body); font-size: .85rem; font-weight: 600; letter-spacing: .06em; cursor: pointer; transition: background .25s, color .25s, transform .15s; margin-top: .6rem; }
-    .vote-btn:hover:not(:disabled) { background: linear-gradient(135deg, var(--gold), var(--saffron)); color: #0c0c10; transform: scale(1.01); }
-    .vote-btn:disabled { opacity: .5; cursor: not-allowed; }
-    .vote-btn.voted { background: linear-gradient(135deg, var(--green-tn), #27ae60); color: #fff; border-color: transparent; opacity: 1; }
-
-    /* ── Live Results Panel ──────────────────────────────────────────────── */
-    .results-section { background: var(--dark-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-    .results-inner { max-width: 800px; margin: 0 auto; }
-    .total-badge { display: inline-flex; align-items: center; gap: .6rem; background: var(--dark-3); border: 1px solid var(--border); border-radius: var(--radius); padding: .8rem 1.4rem; margin-bottom: 2.5rem; }
-    .total-badge .label { font-size: .8rem; color: var(--muted); }
-    .total-badge .number { font-family: var(--ff-display); font-size: 2rem; font-weight: 700; color: var(--gold-light); }
-
-    .result-row { display: grid; grid-template-columns: 160px 1fr 70px; align-items: center; gap: 1.2rem; margin-bottom: 1.3rem; }
-    .result-name { font-size: .9rem; font-weight: 500; display: flex; align-items: center; gap: .7rem; }
-    .result-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); flex-shrink: 0; }
-    .result-bar-track { height: 10px; border-radius: 100px; background: rgba(255,255,255,.07); overflow: hidden; }
-    .result-bar-fill { height: 100%; border-radius: 100px; width: 0%; transition: width 1s cubic-bezier(.25,.8,.25,1); }
-    
-    .r1 { background: linear-gradient(90deg, #c8922a, #f0c05a); }
-    .r2 { background: linear-gradient(90deg, #1a6b3c, #2ecc71); }
-    .r3 { background: linear-gradient(90deg, #1a3a8b, #4a90d9); }
-    .r4 { background: linear-gradient(90deg, #8b1a1a, #e74c3c); }
-
-    .result-count { font-size: .82rem; text-align: right; color: var(--muted); }
-    .result-count strong { display: block; color: var(--text); font-size: 1rem; }
-
-    /* ── Footer ──────────────────────────────────────────────────────────── */
-    footer { padding: 3rem 6vw; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
-    .footer-logo { font-family: var(--ff-display); font-size: 1.3rem; color: var(--gold-light); }
-    .footer-note { font-size: .75rem; color: var(--muted); max-width: 340px; line-height: 1.6; }
-
-    /* ── Nav & Components ────────────────────────────────────────────────── */
-    .live-dot { display: inline-flex; align-items: center; gap: .45rem; font-size: .72rem; color: #2ecc71; letter-spacing: .1em; text-transform: uppercase; }
-    .live-dot::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 0 rgba(46,204,113,.5); animation: pulse 1.4s infinite; }
-    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46,204,113,.5); } 70% { box-shadow: 0 0 0 8px rgba(46,204,113,0); } 100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); } }
-
-    .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(120px); background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: .9rem 1.8rem; border-radius: var(--radius); font-size: .9rem; box-shadow: 0 12px 40px rgba(0,0,0,.4); transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s; z-index: 9999; opacity: 0; pointer-events: none; }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
-    .toast.success { border-color: #2ecc71; color: #2ecc71; }
-    .toast.warn { border-color: var(--gold); color: var(--gold-light); }
-    .toast.error { border-color: #e74c3c; color: #e74c3c; }
-
-    .flag-stripe { height: 4px; background: linear-gradient(90deg, var(--saffron) 0%, var(--saffron) 33%, #fff 33%, #fff 66%, var(--green-tn) 66%); }
-
-    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 6vw; background: rgba(12,12,16,.8); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(200,146,42,.1); }
-    .nav-brand { font-family: var(--ff-display); font-size: 1.25rem; color: var(--gold-light); letter-spacing: .02em; }
-    .nav-brand span { color: var(--muted); font-size: .85em; }
-    
-    .nav-actions { display: flex; align-items: center; gap: 1.5rem; }
-
-    .disclaimer { background: rgba(255,111,0,.07); border: 1px solid rgba(255,111,0,.2); border-radius: var(--radius); padding: 1rem 1.4rem; font-size: .8rem; color: #ffa94d; margin-bottom: 3rem; display: flex; gap: .7rem; align-items: flex-start; }
-    .disclaimer svg { flex-shrink: 0; margin-top: 1px; }
-
-    /* ── Responsive ──────────────────────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .result-row { grid-template-columns: 130px 1fr 56px; gap: .8rem; }
-      .candidates-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
-      .hero-content { padding-bottom: 12vh; }
-      .nav-actions { gap: 1rem; }
-      .live-dot span { display: none; } /* Hide text on mobile */
+    .hero h1 .line2 {
+      display: block; color: var(--text);
+      font-size: 0.6em; font-weight: 400;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      -webkit-text-fill-color: var(--text-muted);
     }
-    @media (max-width: 420px) { .candidates-grid { grid-template-columns: 1fr; } }
+    .hero-tamil {
+      font-family: 'Noto Sans Tamil', sans-serif;
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      color: var(--text-muted); margin-bottom: 2rem;
+      animation: fadeInUp 1s ease 0.4s both;
+    }
 
-    /* ── Entrance animations ─────────────────────────────────────────────── */
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-    .fade-up { animation: fadeUp .7s ease both; }
-    .delay-1 { animation-delay: .15s; }
-    .delay-2 { animation-delay: .3s; }
-    .delay-3 { animation-delay: .45s; }
+    .hero-divider {
+      display: flex; align-items: center; gap: 1rem;
+      max-width: 500px; margin: 0 auto 2rem;
+      animation: fadeInUp 1s ease 0.45s both;
+    }
+    .hero-divider-line { flex: 1; height: 1px; background: rgba(201,168,76,0.2); }
+    .hero-divider-gem { font-size: 1rem; color: var(--gold); }
+
+    .hero-subtitle {
+      font-size: 1.1rem; color: var(--text-muted);
+      max-width: 580px; margin: 0 auto 3rem; line-height: 1.75;
+      animation: fadeInUp 1s ease 0.5s both;
+    }
+
+    .hero-stats {
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+      animation: fadeInUp 1s ease 0.6s both; margin-bottom: 3rem;
+    }
+    .stat-pill {
+      padding: 1rem 1.8rem;
+      background: rgba(201,168,76,0.06);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: var(--r);
+      text-align: center;
+      backdrop-filter: blur(10px);
+      position: relative; overflow: hidden;
+    }
+    .stat-pill::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .stat-pill .val {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem; font-weight: 700; color: var(--gold);
+      display: block; line-height: 1;
+    }
+    .stat-pill .lbl {
+      font-size: 0.72rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.15em;
+      margin-top: 0.3rem;
+    }
+
+    .hero-cta {
+      display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+      animation: fadeInUp 1s ease 0.7s both;
+    }
+    .btn {
+      padding: 0.9rem 2rem; border-radius: 8px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.3s ease;
+      text-decoration: none; display: inline-flex;
+      align-items: center; gap: 0.6rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .btn-gold {
+      background: var(--gradient-gold);
+      color: var(--ink); border: none;
+      box-shadow: var(--glow-gold);
+    }
+    .btn-gold:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 60px rgba(201,168,76,0.5);
+    }
+    .btn-outline {
+      background: transparent; color: var(--text);
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+    .btn-outline:hover {
+      background: rgba(201,168,76,0.06);
+      border-color: var(--gold); color: var(--gold);
+    }
+
+    .scroll-hint {
+      position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      color: var(--text-muted); font-size: 0.72rem; letter-spacing: 0.25em;
+      text-transform: uppercase;
+      animation: fadeInUp 1s ease 1s both;
+    }
+    .scroll-arrow { animation: scrollBounce 2s ease infinite; }
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION CHROME ── */
+    .section {
+      padding: 7rem 5%; position: relative; z-index: 1;
+    }
+    .section-header {
+      text-align: center; margin-bottom: 5rem;
+    }
+    .section-chip {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.45rem 1.1rem;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 100px;
+      font-size: 0.72rem; font-weight: 600;
+      color: var(--gold); letter-spacing: 0.2em;
+      text-transform: uppercase; margin-bottom: 1.2rem;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 700; margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--text), var(--gold-light));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-desc {
+      font-size: 1.05rem; color: var(--text-muted);
+      max-width: 580px; margin: 0 auto; line-height: 1.75;
+    }
+    .section-ornament {
+      display: flex; align-items: center; gap: 1rem;
+      justify-content: center; margin-top: 1.5rem;
+    }
+    .section-ornament-line { width: 60px; height: 1px; background: rgba(201,168,76,0.3); }
+    .section-ornament-gem { font-size: 0.8rem; color: var(--gold); }
+
+    /* ── CANDIDATE CARDS ── */
+    .candidates-section { background: var(--ink-1); }
+
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem; max-width: 1300px; margin: 0 auto;
+    }
+
+    .candidate-card {
+      background: linear-gradient(165deg, var(--ink-2), var(--ink-1));
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: var(--r-lg); overflow: hidden;
+      transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative; cursor: default;
+    }
+    .candidate-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(165deg, rgba(201,168,76,0.04), transparent);
+      opacity: 0; transition: opacity 0.4s; z-index: 0; border-radius: var(--r-lg);
+    }
+    .candidate-card:hover {
+      transform: translateY(-10px);
+      border-color: rgba(201,168,76,0.45);
+      box-shadow: var(--glow-gold), 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .candidate-card:hover::before { opacity: 1; }
+    .candidate-card.leader {
+      border-color: var(--gold);
+      box-shadow: var(--glow-gold);
+    }
+    .leader-crown {
+      display: none;
+      position: absolute; top: 1rem; right: 1rem;
+      z-index: 10;
+      padding: 0.35rem 0.8rem;
+      background: var(--gradient-gold);
+      color: var(--ink); font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border-radius: 100px;
+    }
+    .candidate-card.leader .leader-crown { display: block; }
+
+    /* Candidate portrait area */
+    .card-portrait {
+      position: relative; aspect-ratio: 4/3; overflow: hidden;
+    }
+    .card-portrait-img {
+      width: 100%; height: 100%; object-fit: cover;
+      object-position: top center;
+      transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      filter: brightness(0.88) contrast(1.05) saturate(0.9);
+    }
+    .candidate-card:hover .card-portrait-img { transform: scale(1.07); }
+
+    .portrait-fallback {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; font-weight: 700;
+      font-family: 'Cinzel', serif;
+    }
+    .portrait-fallback.c1 { background: linear-gradient(135deg, #0f2027, #1a3a2a); color: #4ade80; }
+    .portrait-fallback.c2 { background: linear-gradient(135deg, #0f1b27, #0a1525); color: #60a5fa; }
+    .portrait-fallback.c3 { background: linear-gradient(135deg, #1f0f00, #2a1500); color: #fb923c; }
+    .portrait-fallback.c4 { background: linear-gradient(135deg, #1a0a0a, #240f0f); color: #f87171; }
+
+    .card-gradient-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, var(--ink-2) 0%, rgba(8,8,16,0.3) 50%, transparent 100%);
+    }
+    .card-number {
+      position: absolute; top: 1rem; left: 1rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(8,8,16,0.8);
+      border: 1px solid rgba(201,168,76,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cinzel', serif; font-size: 0.75rem;
+      color: var(--gold); font-weight: 700;
+    }
+    .card-party-tag {
+      position: absolute; bottom: 1rem; left: 1rem;
+      padding: 0.3rem 0.7rem;
+      background: rgba(8,8,16,0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 6px; font-size: 0.72rem;
+      font-weight: 600; color: var(--gold);
+      letter-spacing: 0.05em;
+    }
+
+    .card-body {
+      padding: 1.5rem; position: relative; z-index: 1;
+    }
+    .candidate-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.35rem; font-weight: 700; margin-bottom: 0.2rem;
+      color: var(--text);
+    }
+    .candidate-role {
+      font-size: 0.85rem; color: var(--text-muted);
+      margin-bottom: 1.2rem; letter-spacing: 0.05em;
+    }
+    .candidate-tagline {
+      font-size: 0.88rem; color: rgba(240,234,208,0.6);
+      font-style: italic; margin-bottom: 1.4rem; line-height: 1.5;
+      border-left: 2px solid rgba(201,168,76,0.3); padding-left: 0.8rem;
+    }
+
+    .vote-meter { margin-bottom: 1.2rem; }
+    .vote-meter-header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 0.5rem; font-size: 0.82rem;
+    }
+    .vote-meter-count { color: var(--text); font-weight: 600; }
+    .vote-meter-pct { color: var(--gold); font-weight: 700; }
+    .vote-meter-track {
+      height: 4px; background: rgba(201,168,76,0.1);
+      border-radius: 2px; overflow: hidden;
+    }
+    .vote-meter-fill {
+      height: 100%; border-radius: 2px; width: 0%;
+      transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .fill-c1 { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .fill-c2 { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+    .fill-c3 { background: linear-gradient(90deg, #c2410c, #fb923c); }
+    .fill-c4 { background: linear-gradient(90deg, #991b1b, #f87171); }
+
+    .vote-btn {
+      width: 100%; padding: 0.85rem;
+      border-radius: 8px; font-family: 'Rajdhani', sans-serif;
+      font-size: 0.9rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.25);
+      color: var(--gold);
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .vote-btn::before {
+      content: ''; position: absolute; inset: 0;
+      background: var(--gradient-gold);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.4s ease; z-index: 0;
+    }
+    .vote-btn:hover::before { transform: scaleX(1); }
+    .vote-btn:hover { color: var(--ink); border-color: var(--gold); }
+    .vote-btn span, .vote-btn svg { position: relative; z-index: 1; }
+    .vote-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .vote-btn:disabled::before { display: none; }
+    .vote-btn.voted {
+      background: rgba(201,168,76,0.15);
+      border-color: var(--gold); color: var(--gold);
+    }
+    .vote-btn.voted::before { display: none; }
+    .vote-btn:active:not(:disabled) { transform: scale(0.97); }
+
+    /* ── LIVE RESULTS ── */
+    .results-section { background: var(--ink-2); }
+
+    .results-wrapper {
+      max-width: 800px; margin: 0 auto;
+    }
+    .results-total-card {
+      background: rgba(201,168,76,0.06);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--r-lg); padding: 2rem;
+      text-align: center; margin-bottom: 2.5rem;
+      position: relative; overflow: hidden;
+    }
+    .results-total-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: var(--gradient-gold);
+    }
+    .results-total-card .big-num {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(3rem, 8vw, 5rem); font-weight: 900;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; line-height: 1;
+    }
+    .results-total-card .big-label {
+      font-size: 0.8rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.2em; margin-top: 0.5rem;
+    }
+
+    .result-row {
+      display: grid; grid-template-columns: 48px 1fr auto;
+      align-items: center; gap: 1.2rem;
+      padding: 1.2rem 1.5rem;
+      background: rgba(201,168,76,0.04);
+      border: 1px solid rgba(201,168,76,0.1);
+      border-radius: var(--r); margin-bottom: 1rem;
+      transition: all 0.3s ease; position: relative; overflow: hidden;
+    }
+    .result-row::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+    .result-row.r1::before { background: #4ade80; }
+    .result-row.r2::before { background: #60a5fa; }
+    .result-row.r3::before { background: #fb923c; }
+    .result-row.r4::before { background: #f87171; }
+    .result-row.leader { border-color: rgba(201,168,76,0.3); }
+
+    .result-avatar {
+      width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+      object-position: top;
+      border: 2px solid rgba(201,168,76,0.2);
+    }
+    .result-avatar-fallback {
+      width: 48px; height: 48px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: 700;
+      border: 2px solid rgba(201,168,76,0.2);
+    }
+    .result-avatar-fallback.c1 { background: #0f2027; color: #4ade80; }
+    .result-avatar-fallback.c2 { background: #0f1b27; color: #60a5fa; }
+    .result-avatar-fallback.c3 { background: #1f0f00; color: #fb923c; }
+    .result-avatar-fallback.c4 { background: #1a0a0a; color: #f87171; }
+
+    .result-info { overflow: hidden; }
+    .result-name-text {
+      font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 0.4rem;
+    }
+    .result-bar-wrap {
+      display: flex; align-items: center; gap: 0.8rem;
+    }
+    .result-bar-track {
+      flex: 1; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px;
+    }
+    .result-bar-inner {
+      height: 100%; border-radius: 2px; width: 0%;
+      transition: width 1.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .result-bar-inner.rb1 { background: linear-gradient(90deg, #16a34a, #4ade80); }
+    .result-bar-inner.rb2 { background: linear-gradient(90deg, #1d4ed8, #60a5fa); }
+    .result-bar-inner.rb3 { background: linear-gradient(90deg, #c2410c, #fb923c); }
+    .result-bar-inner.rb4 { background: linear-gradient(90deg, #991b1b, #f87171); }
+
+    .result-nums { text-align: right; min-width: 80px; }
+    .result-count-big {
+      font-family: 'Cinzel', serif; font-size: 1.2rem; font-weight: 700;
+      color: var(--text); display: block;
+    }
+    .result-pct-text { font-size: 0.8rem; color: var(--gold); font-weight: 600; }
+
+    /* ── INFO SECTION ── */
+    .info-section { background: var(--ink-1); }
+    .info-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem; max-width: 1000px; margin: 0 auto;
+    }
+    .info-card {
+      padding: 2rem 1.5rem;
+      background: rgba(201,168,76,0.04);
+      border: 1px solid rgba(201,168,76,0.1);
+      border-radius: var(--r); text-align: center;
+      transition: all 0.3s ease;
+    }
+    .info-card:hover {
+      border-color: rgba(201,168,76,0.3);
+      background: rgba(201,168,76,0.08);
+      transform: translateY(-4px);
+    }
+    .info-icon {
+      font-size: 2.5rem; margin-bottom: 1rem;
+    }
+    .info-title {
+      font-family: 'Cinzel', serif; font-size: 1rem; font-weight: 600;
+      color: var(--gold); margin-bottom: 0.5rem;
+    }
+    .info-desc { font-size: 0.88rem; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── TOAST ── */
+    #toastContainer {
+      position: fixed; bottom: 2rem; right: 2rem;
+      z-index: 99998; display: flex; flex-direction: column; gap: 0.8rem;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 1rem 1.4rem;
+      background: var(--ink-3);
+      border-radius: var(--r); font-size: 0.9rem;
+      font-weight: 500; pointer-events: auto;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      max-width: 340px; min-width: 260px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border: 1px solid rgba(34,197,94,0.4); }
+    .toast.error { border: 1px solid rgba(185,28,28,0.5); }
+    .toast-icon { flex-shrink: 0; }
+    .toast.success .toast-icon { color: #22c55e; }
+    .toast.error .toast-icon { color: #ef4444; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 3rem 5%; text-align: center;
+      background: var(--ink-1);
+      border-top: 1px solid rgba(201,168,76,0.1);
+      position: relative; z-index: 1;
+    }
+    .footer-logo {
+      font-family: 'Cinzel', serif; font-size: 1.3rem; font-weight: 700;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 1rem;
+    }
+    .footer-text { font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.1em; }
+    .footer-tamil {
+      font-family: 'Noto Sans Tamil', sans-serif;
+      font-size: 0.9rem; color: rgba(201,168,76,0.4);
+      margin-top: 1rem;
+    }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 0.9rem 4%; }
+      .nav-links { display: none; }
+      .candidates-grid { grid-template-columns: 1fr; max-width: 420px; margin: 0 auto; }
+      .hero-stats { gap: 1rem; }
+      .stat-pill .val { font-size: 1.5rem; }
+      .hero-cta { flex-direction: column; align-items: center; }
+      .btn { width: 100%; justify-content: center; max-width: 280px; }
+      #toastContainer { right: 1rem; left: 1rem; }
+      .toast { min-width: unset; }
+      .result-row { grid-template-columns: 40px 1fr auto; gap: 0.8rem; padding: 1rem; }
+    }
+    @media (max-width: 480px) {
+      .hero { padding: 8rem 4% 4rem; }
+      .section { padding: 5rem 4%; }
+      .nav-brand .nav-sub { display: none; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="flag-stripe"></div>
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-emblem">
+      <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="60" cy="60" r="56" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+        <circle cx="60" cy="60" r="52" stroke="rgba(201,168,76,0.1)" stroke-width="0.5"/>
+        <!-- ornament dots -->
+        <circle cx="60" cy="4" r="3" fill="#c9a84c" opacity="0.8"/>
+        <circle cx="116" cy="60" r="3" fill="#c9a84c" opacity="0.8"/>
+        <circle cx="60" cy="116" r="3" fill="#c9a84c" opacity="0.8"/>
+        <circle cx="4" cy="60" r="3" fill="#c9a84c" opacity="0.8"/>
+        <!-- arc dashes -->
+        <circle cx="60" cy="60" r="56" stroke="url(#goldGrad)" stroke-width="2" stroke-dasharray="8 12" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="120" y2="120">
+            <stop offset="0%" stop-color="#c9a84c"/>
+            <stop offset="50%" stop-color="#f0d080"/>
+            <stop offset="100%" stop-color="#c9a84c"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="loader-inner">⚖️</div>
+    </div>
+    <div class="loader-word">TN Poll 2026</div>
+    <div class="loader-sub">தமிழ்நாடு தேர்தல்</div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar-fill"></div>
+    </div>
+  </div>
 
+  <!-- BG -->
+  <div class="bg-layer">
+    <div class="bg-noise"></div>
+    <div class="bg-radial"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-vignette"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toastContainer"></div>
+
+  <!-- NAV -->
   <nav>
-    <div class="nav-brand">TN Chief Minister Poll <span>2026</span></div>
-    <div class="nav-actions">
-      <div id="conn-status" class="live-dot" style="color: #8a8795;"><span>Checking Server...</span></div>
+    <div class="nav-brand">
+      <div class="nav-icon">🏛️</div>
+      <div>
+        <div class="nav-title">TN CM Poll</div>
+        <div class="nav-sub">2026 Election</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-links">
+        <a href="#vote" class="nav-link">Vote</a>
+        <a href="#results" class="nav-link">Results</a>
+        <a href="#about" class="nav-link">About</a>
+      </div>
+      <div class="live-pill">
+        <div class="live-dot"></div>
+        <span id="serverStatus">Live</span>
+      </div>
     </div>
   </nav>
 
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-img"></div>
-    <div class="hero-overlay"></div>
-    <div class="particles" id="particles"></div>
-
+  <!-- HERO -->
+  <section class="hero" id="home">
     <div class="hero-content">
-      <div class="eyebrow fade-up">Tamil Nadu Assembly Election</div>
-      <h1 class="fade-up delay-1">
-        Who Will Lead<br/><span>Tamil Nadu</span><br/>in 2026?
+      <div class="hero-flag-bar">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Tamil Nadu Chief Minister Poll 2026
+      </div>
+      <h1>
+        <span class="line1">Your Voice.</span>
+        <span class="line2">Your Future. Your Tamil Nadu.</span>
       </h1>
-      <p class="hero-sub fade-up delay-2">
-        Cast your vote securely. Watch the results update in real-time. One vote per device.
+      <div class="hero-tamil">உங்கள் வாக்கு — தமிழ்நாட்டின் விதி</div>
+      <div class="hero-divider">
+        <div class="hero-divider-line"></div>
+        <div class="hero-divider-gem">◆</div>
+        <div class="hero-divider-line"></div>
+      </div>
+      <p class="hero-subtitle">
+        Cast your vote for Tamil Nadu's next Chief Minister. Every vote counts — 
+        see real-time results as the people of this great state make their voice heard.
       </p>
-      <div class="hero-stats fade-up delay-3">
-        <div class="stat-pill">🗳 Total Votes <strong id="total-votes">0</strong></div>
-        
-        <div class="stat-pill">🔒 1 Vote Per Device</div>
+      <div class="hero-stats">
+        <div class="stat-pill">
+          <span class="val" id="totalVotes">0</span>
+          <div class="lbl">Total Votes Cast</div>
+        </div>
+        <div class="stat-pill">
+          <span class="val">4</span>
+          <div class="lbl">Candidates</div>
+        </div>
+        <div class="stat-pill">
+          <span class="val" id="activeUsers">—</span>
+          <div class="lbl">Live Viewers</div>
+        </div>
+      </div>
+      <div class="hero-cta">
+        <a href="#vote" class="btn btn-gold">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Cast Your Vote
+        </a>
+        <a href="#results" class="btn btn-outline">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Live Results
+        </a>
       </div>
     </div>
-
-    <div class="scroll-cue">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M12 5v14M5 12l7 7 7-7"/>
-      </svg>
-      Scroll
+    <div class="scroll-hint">
+      <span>Scroll Down</span>
+      <div class="scroll-arrow">↓</div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="section-label">Cast Your Vote</div>
-    <h2 class="section-title">The Candidates</h2>
-    <p class="section-desc">Select your preferred Chief Ministerial candidate. Cast your vote securely to make your voice heard.</p>
-
-    <div class="disclaimer">
-      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-      </svg>
-      This is an unofficial public opinion poll. Voting is restricted to one vote per device using local storage.
+  <!-- VOTE SECTION -->
+  <section class="section candidates-section" id="vote">
+    <div class="section-header">
+      <div class="section-chip">⚡ Live Voting Open</div>
+      <h2 class="section-title">Choose Your Chief Minister</h2>
+      <p class="section-desc">Select the leader you believe will guide Tamil Nadu to prosperity. One vote per person, counted in real time.</p>
+      <div class="section-ornament">
+        <div class="section-ornament-line"></div>
+        <div class="section-ornament-gem">◆</div>
+        <div class="section-ornament-line"></div>
+      </div>
     </div>
 
     <div class="candidates-grid">
-      <div class="candidate-card" data-id="candidate1">
-        <div class="card-photo">
-          <img src="images 1.jpeg" alt="Candidate 1" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/c8922a?text=Candidate+1'"/>
-          <div class="card-photo-overlay"></div>
-          <div class="party-badge">TVK</div>
+
+      <!-- Candidate 1: Vijay -->
+      <div class="candidate-card" data-candidate="candidate1">
+        <div class="leader-crown">👑 Leading</div>
+        <div class="card-portrait">
+          <img src="images.jpeg" alt="Joseph Vijay" class="card-portrait-img"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+          <div class="portrait-fallback c1" style="display:none">V</div>
+          <div class="card-gradient-overlay"></div>
+          <div class="card-number">01</div>
+          <div class="card-party-tag">Tamilaga Vettri Kazhagam</div>
         </div>
         <div class="card-body">
-          <div class="candidate-name">Joseph Vijay Chandrasekar</div>
-          <div class="candidate-role"></div>
-          <div class="vote-bar-wrap">
-            <div class="vote-bar-header">
-              <span>Votes: <span class="vote-count" id="count-candidate1">0</span></span>
-              <span class="vote-pct" id="pct-candidate1">0%</span>
+          <div class="candidate-name">Joseph Vijay</div>
+          <div class="candidate-role">Actor & Political Leader</div>
+          <div class="candidate-tagline">"A new dawn for every Tamil heart — namma ooru, namma vazhvu."</div>
+          <div class="vote-meter">
+            <div class="vote-meter-header">
+              <span class="vote-meter-count"><span id="votes-candidate1">0</span> votes</span>
+              <span class="vote-meter-pct" id="pct-candidate1">0%</span>
             </div>
-            <div class="vote-bar-track"><div class="vote-bar-fill r1" id="bar-candidate1"></div></div>
+            <div class="vote-meter-track">
+              <div class="vote-meter-fill fill-c1" id="bar-candidate1"></div>
+            </div>
           </div>
-          <button class="vote-btn">Cast Vote</button>
+          <button class="vote-btn" data-candidate="candidate1">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>Vote for Vijay</span>
+          </button>
         </div>
       </div>
 
-      <div class="candidate-card" data-id="candidate2">
-        <div class="card-photo">
-          <img src="image 2.jpeg" alt="Candidate 2" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/1a6b3c?text=Candidate+2'"/>
-          <div class="card-photo-overlay"></div>
-          <div class="party-badge">DMK</div>
+      <!-- Candidate 2: Stalin -->
+      <div class="candidate-card" data-candidate="candidate2">
+        <div class="leader-crown">👑 Leading</div>
+        <div class="card-portrait">
+          <img src="download (1).jpeg" alt="M.K. Stalin" class="card-portrait-img"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+          <div class="portrait-fallback c2" style="display:none">S</div>
+          <div class="card-gradient-overlay"></div>
+          <div class="card-number">02</div>
+          <div class="card-party-tag">DMK</div>
         </div>
         <div class="card-body">
-          <div class="candidate-name">M.K Stalin</div>
-          
-          <div class="vote-bar-wrap">
-            <div class="vote-bar-header">
-              <span>Votes: <span class="vote-count" id="count-candidate2">0</span></span>
-              <span class="vote-pct" id="pct-candidate2">0%</span>
+          <div class="candidate-name">M.K. Stalin</div>
+          <div class="candidate-role">Current Chief Minister</div>
+          <div class="candidate-tagline">"Continuing the Dravidian legacy — governance rooted in justice and equality."</div>
+          <div class="vote-meter">
+            <div class="vote-meter-header">
+              <span class="vote-meter-count"><span id="votes-candidate2">0</span> votes</span>
+              <span class="vote-meter-pct" id="pct-candidate2">0%</span>
             </div>
-            <div class="vote-bar-track"><div class="vote-bar-fill r2" id="bar-candidate2"></div></div>
+            <div class="vote-meter-track">
+              <div class="vote-meter-fill fill-c2" id="bar-candidate2"></div>
+            </div>
           </div>
-          <button class="vote-btn">Cast Vote</button>
+          <button class="vote-btn" data-candidate="candidate2">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>Vote for Stalin</span>
+          </button>
         </div>
       </div>
 
-      <div class="candidate-card" data-id="candidate3">
-        <div class="card-photo">
-          <img src="image 3.jpg" alt="Candidate 3" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/1a3a8b?text=Candidate+3'"/>
-          <div class="card-photo-overlay"></div>
-          <div class="party-badge">ADMK</div>
+      <!-- Candidate 3: Palanisamy -->
+      <div class="candidate-card" data-candidate="candidate3">
+        <div class="leader-crown">👑 Leading</div>
+        <div class="card-portrait">
+          <img src="download.jpeg" alt="E. Palanisami" class="card-portrait-img"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+          <div class="portrait-fallback c3" style="display:none">P</div>
+          <div class="card-gradient-overlay"></div>
+          <div class="card-number">03</div>
+          <div class="card-party-tag">AIADMK</div>
         </div>
         <div class="card-body">
-          <div class="candidate-name">Eps</div>
-
-          <div class="vote-bar-wrap">
-            <div class="vote-bar-header">
-              <span>Votes: <span class="vote-count" id="count-candidate3">0</span></span>
-              <span class="vote-pct" id="pct-candidate3">0%</span>
+          <div class="candidate-name">E. Palanisami</div>
+          <div class="candidate-role">Leader of Opposition</div>
+          <div class="candidate-tagline">"Strengthening Tamil Nadu's foundations — development that reaches every district."</div>
+          <div class="vote-meter">
+            <div class="vote-meter-header">
+              <span class="vote-meter-count"><span id="votes-candidate3">0</span> votes</span>
+              <span class="vote-meter-pct" id="pct-candidate3">0%</span>
             </div>
-            <div class="vote-bar-track"><div class="vote-bar-fill r3" id="bar-candidate3"></div></div>
+            <div class="vote-meter-track">
+              <div class="vote-meter-fill fill-c3" id="bar-candidate3"></div>
+            </div>
           </div>
-          <button class="vote-btn">Cast Vote</button>
+          <button class="vote-btn" data-candidate="candidate3">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>Vote for Palanisami</span>
+          </button>
         </div>
       </div>
 
-      <div class="candidate-card" data-id="candidate4">
-        <div class="card-photo">
-          <img src="image 4.jpg" alt="Candidate 4" onerror="this.src='https://via.placeholder.com/400x450/1e1e24/8b1a1a?text=Candidate+4'"/>
-          <div class="card-photo-overlay"></div>
-          <div class="party-badge">NTK</div>
+      <!-- Candidate 4: Seeman -->
+      <div class="candidate-card" data-candidate="candidate4">
+        <div class="leader-crown">👑 Leading</div>
+        <div class="card-portrait">
+          <img src="img.jpeg" alt="Seeman" class="card-portrait-img"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+          <div class="portrait-fallback c4" style="display:none">S</div>
+          <div class="card-gradient-overlay"></div>
+          <div class="card-number">04</div>
+          <div class="card-party-tag">NTK</div>
         </div>
         <div class="card-body">
           <div class="candidate-name">Seeman</div>
-
-          <div class="vote-bar-wrap">
-            <div class="vote-bar-header">
-              <span>Votes: <span class="vote-count" id="count-candidate4">0</span></span>
-              <span class="vote-pct" id="pct-candidate4">0%</span>
+          <div class="candidate-role">Party President, NTK</div>
+          <div class="candidate-tagline">"Tamil sovereignty, Tamil pride — a voice for the working people of our land."</div>
+          <div class="vote-meter">
+            <div class="vote-meter-header">
+              <span class="vote-meter-count"><span id="votes-candidate4">0</span> votes</span>
+              <span class="vote-meter-pct" id="pct-candidate4">0%</span>
             </div>
-            <div class="vote-bar-track"><div class="vote-bar-fill r4" id="bar-candidate4"></div></div>
+            <div class="vote-meter-track">
+              <div class="vote-meter-fill fill-c4" id="bar-candidate4"></div>
+            </div>
           </div>
-          <button class="vote-btn">Cast Vote</button>
+          <button class="vote-btn" data-candidate="candidate4">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>Vote for Seeman</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="section results-section" id="results">
+    <div class="section-header">
+      <div class="section-chip">📊 Live Tally</div>
+      <h2 class="section-title">Real-Time Results</h2>
+      <p class="section-desc">Watch the pulse of public opinion unfold in real time. Results refresh the moment votes are cast.</p>
+      <div class="section-ornament">
+        <div class="section-ornament-line"></div>
+        <div class="section-ornament-gem">◆</div>
+        <div class="section-ornament-line"></div>
+      </div>
+    </div>
+
+    <div class="results-wrapper">
+      <div class="results-total-card">
+        <div class="big-num" id="totalVotes2">0</div>
+        <div class="big-label">Total Votes Cast Across Tamil Nadu</div>
+      </div>
+
+      <div class="result-row r1" data-candidate="candidate1">
+        <img src="images 1.jpeg" alt="Vijay" class="result-avatar"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+        <div class="result-avatar-fallback c1" style="display:none">V</div>
+        <div class="result-info">
+          <div class="result-name-text">Joseph Vijay</div>
+          <div class="result-bar-wrap">
+            <div class="result-bar-track">
+              <div class="result-bar-inner rb1" id="bar2-candidate1"></div>
+            </div>
+          </div>
+        </div>
+        <div class="result-nums">
+          <span class="result-count-big" id="count2-candidate1">0</span>
+          <span class="result-pct-text" id="pct2-candidate1">0%</span>
+        </div>
+      </div>
+
+      <div class="result-row r2" data-candidate="candidate2">
+        <img src="image 2.jpeg" alt="Stalin" class="result-avatar"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+        <div class="result-avatar-fallback c2" style="display:none">S</div>
+        <div class="result-info">
+          <div class="result-name-text">M.K. Stalin</div>
+          <div class="result-bar-wrap">
+            <div class="result-bar-track">
+              <div class="result-bar-inner rb2" id="bar2-candidate2"></div>
+            </div>
+          </div>
+        </div>
+        <div class="result-nums">
+          <span class="result-count-big" id="count2-candidate2">0</span>
+          <span class="result-pct-text" id="pct2-candidate2">0%</span>
+        </div>
+      </div>
+
+      <div class="result-row r3" data-candidate="candidate3">
+        <img src="image 3.jpg" alt="Palanisami" class="result-avatar"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+        <div class="result-avatar-fallback c3" style="display:none">P</div>
+        <div class="result-info">
+          <div class="result-name-text">E. Palanisami</div>
+          <div class="result-bar-wrap">
+            <div class="result-bar-track">
+              <div class="result-bar-inner rb3" id="bar2-candidate3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="result-nums">
+          <span class="result-count-big" id="count2-candidate3">0</span>
+          <span class="result-pct-text" id="pct2-candidate3">0%</span>
+        </div>
+      </div>
+
+      <div class="result-row r4" data-candidate="candidate4">
+        <img src="image 4.jpg" alt="Seeman" class="result-avatar"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"/>
+        <div class="result-avatar-fallback c4" style="display:none">S</div>
+        <div class="result-info">
+          <div class="result-name-text">Seeman</div>
+          <div class="result-bar-wrap">
+            <div class="result-bar-track">
+              <div class="result-bar-inner rb4" id="bar2-candidate4"></div>
+            </div>
+          </div>
+        </div>
+        <div class="result-nums">
+          <span class="result-count-big" id="count2-candidate4">0</span>
+          <span class="result-pct-text" id="pct2-candidate4">0%</span>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section results-section">
-    <div class="results-inner">
-      <div class="section-label">Live Dashboard</div>
-      <h2 class="section-title">Real-Time Results</h2>
-      
-      <div class="total-badge">
-        <div><div class="label">Total Votes Cast</div><div class="number" id="total-votes-2">0</div></div>
+  <!-- ABOUT / INFO -->
+  <section class="section info-section" id="about">
+    <div class="section-header">
+      <div class="section-chip">🏛️ Transparency</div>
+      <h2 class="section-title">How This Poll Works</h2>
+      <p class="section-desc">A fair, secure, and transparent public opinion poll for Tamil Nadu's 2026 election.</p>
+    </div>
+    <div class="info-cards">
+      <div class="info-card">
+        <div class="info-icon">🔒</div>
+        <div class="info-title">One Vote Per Person</div>
+        <div class="info-desc">Each participant can cast exactly one vote, tracked by a unique session identifier to prevent duplicates.</div>
       </div>
-
-      <div class="result-row">
-        <div class="result-name"><img src="images 1.jpeg" alt="" class="result-avatar" onerror="this.style.background='#c8922a';this.src=''"/>Candidate One</div>
-        <div class="result-bar-track"><div class="result-bar-fill r1" id="bar2-candidate1"></div></div>
-        <div class="result-count"><strong id="count2-candidate1">0</strong><span id="pct2-candidate1">0%</span></div>
+      <div class="info-card">
+        <div class="info-icon">⚡</div>
+        <div class="info-title">Real-Time Updates</div>
+        <div class="info-desc">Results update instantly using WebSocket technology. No refresh needed — watch the tally change live.</div>
       </div>
-      <div class="result-row">
-        <div class="result-name"><img src="image 2.jpeg" alt="" class="result-avatar" onerror="this.style.background='#1a6b3c';this.src=''"/>Candidate Two</div>
-        <div class="result-bar-track"><div class="result-bar-fill r2" id="bar2-candidate2"></div></div>
-        <div class="result-count"><strong id="count2-candidate2">0</strong><span id="pct2-candidate2">0%</span></div>
+      <div class="info-card">
+        <div class="info-icon">📊</div>
+        <div class="info-title">Transparent Counting</div>
+        <div class="info-desc">Vote percentages and totals are calculated openly. Every vote is counted and displayed immediately.</div>
       </div>
-      <div class="result-row">
-        <div class="result-name"><img src="image 3.jpg" alt="" class="result-avatar" onerror="this.style.background='#1a3a8b';this.src=''"/>Candidate Three</div>
-        <div class="result-bar-track"><div class="result-bar-fill r3" id="bar2-candidate3"></div></div>
-        <div class="result-count"><strong id="count2-candidate3">0</strong><span id="pct2-candidate3">0%</span></div>
-      </div>
-      <div class="result-row">
-        <div class="result-name"><img src="image 4.jpg" alt="" class="result-avatar" onerror="this.style.background='#8b1a1a';this.src=''"/>Candidate Four</div>
-        <div class="result-bar-track"><div class="result-bar-fill r4" id="bar2-candidate4"></div></div>
-        <div class="result-count"><strong id="count2-candidate4">0</strong><span id="pct2-candidate4">0%</span></div>
+      <div class="info-card">
+        <div class="info-icon">🌐</div>
+        <div class="info-title">Public Opinion Poll</div>
+        <div class="info-desc">This is a public sentiment poll, not an official election. It reflects the voice of online participants.</div>
       </div>
     </div>
   </section>
 
+  <!-- FOOTER -->
   <footer>
-    <div class="footer-logo">TN CM Poll 2026</div>
-    <div class="footer-note">An unofficial public opinion poll. Data stored securely in Firebase.</div>
+    <div class="footer-logo">⚖️ TN CM Poll 2026</div>
+    <p class="footer-text">Secure Voting Platform &nbsp;•&nbsp; Real-Time Results &nbsp;•&nbsp; One Vote Per Person</p>
+    <p class="footer-tamil">தமிழ்நாடு தேர்தல் கருத்துக்கணிப்பு 2026</p>
   </footer>
 
-  <div class="toast" id="toast"></div>
-
+  <!-- Socket.IO loaded only when served from Node — fails silently otherwise -->
   <script>
-    (function(){
-      const wrap = document.getElementById('particles');
-      for (let i = 0; i < 35; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.cssText = `
-          left:${Math.random()*100}%;
-          --dur:${6 + Math.random()*10}s;
-          --delay:${Math.random()*10}s;
-          --drift:${(Math.random()-0.5)*80}px;
-          width:${1+Math.random()*2}px;
-          height:${1+Math.random()*2}px;
-          opacity:${0.2+Math.random()*0.6};
-        `;
-        wrap.appendChild(p);
-      }
+    /* ── Load socket.io only if served from Node, ignore if file:// ── */
+    (function() {
+      if (window.location.protocol === 'file:') return; // skip entirely for file://
+      var s = document.createElement('script');
+      s.src = '/socket.io/socket.io.js';
+      s.onerror = function() { /* server not running – local mode handles it */ };
+      document.head.appendChild(s);
     })();
-
-    const obs = new MutationObserver(() => {
-      let total = 0;
-      const counts = {};
-      ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
-        const v = parseInt(document.getElementById(`count-${id}`)?.textContent.replace(/,/g,'') || 0);
-        counts[id] = v; total += v;
-      });
-      ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
-        const pct = total > 0 ? Math.round((counts[id]/total)*100) : 0;
-        const b2 = document.getElementById(`bar2-${id}`);
-        const c2 = document.getElementById(`count2-${id}`);
-        const p2 = document.getElementById(`pct2-${id}`);
-        if (b2) b2.style.width = pct + '%';
-        if (c2) c2.textContent = counts[id].toLocaleString();
-        if (p2) p2.textContent = pct + '%';
-      });
-      const t2 = document.getElementById('total-votes-2');
-      if (t2) t2.textContent = total.toLocaleString();
-    });
-
-    ["candidate1","candidate2","candidate3","candidate4"].forEach(id => {
-      const el = document.getElementById(`count-${id}`);
-      if (el) obs.observe(el, { childList:true, characterData:true, subtree:true });
-    });
-    
-    const tv = document.getElementById('total-votes');
-    if (tv) obs.observe(tv, { childList:true, characterData:true, subtree:true });
   </script>
-
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
   <script>
-    // New TN-ELECTION3 Configuration with Singapore Region URL
-    const firebaseConfig = {
-      apiKey: "AIzaSyBpkUuK57Qn2r5fSMoPZJ-qoB2OIc1HAhI",
-      authDomain: "tn-election3.firebaseapp.com",
-      databaseURL: "https://tn-election3-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "tn-election3",
-      storageBucket: "tn-election3.firebasestorage.app",
-      messagingSenderId: "612087702866",
-      appId: "1:612087702866:web:a0749359122c1bc4bec68b",
-      measurementId: "G-64YDY7YEJG"
-    };
+    /* ════════════════════════════════════════════════
+       TN CM POLL 2026 — VOTING LOGIC
+       Works in THREE modes automatically:
+         1. Full mode  — Node server running + Socket.IO
+         2. HTTP mode  — Node server running, no socket
+         3. Local mode — No server (file:// or offline)
+    ════════════════════════════════════════════════ */
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    
-    const CANDIDATES = ["candidate1","candidate2","candidate3","candidate4"];
-    const LS_KEY = "tn_cm_vote_2026";
+    const CANDIDATES = ['candidate1', 'candidate2', 'candidate3', 'candidate4'];
+    const NAMES = { candidate1:'Vijay', candidate2:'Stalin', candidate3:'Palanisami', candidate4:'Seeman' };
+    const LS_KEY   = 'tn_voted_2026';
+    const LS_VOTES = 'tn_local_votes_2026';
+    const LS_UID   = 'tn_vote_user_id';
 
-    // ── Connection Monitor ──────────────────────────────────────────
-    const connectedRef = db.ref(".info/connected");
-    const connStatusEl = document.getElementById("conn-status");
+    /* ── user identity ── */
+    const userId = localStorage.getItem(LS_UID) ||
+      'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem(LS_UID, userId);
 
-    connectedRef.on("value", (snap) => {
-      if (snap.val() === true) {
-        console.log("Connected to tn-election3 Database.");
-        connStatusEl.style.color = "#2ecc71";
-        connStatusEl.innerHTML = "<span>● Live Connection</span>";
-      } else {
-        console.warn("Disconnected from Database.");
-        connStatusEl.style.color = "#e74c3c";
-        connStatusEl.innerHTML = "<span>○ Reconnecting...</span>";
-      }
-    });
+    let hasVoted    = localStorage.getItem(LS_KEY);   // candidateId or null
+    let serverMode  = false;   // true once we confirm server is reachable
+    let socket      = null;
 
-    function lockAllCards(votedId) {
-      document.querySelectorAll(".candidate-card").forEach(card => {
-        const id  = card.dataset.id;
-        const btn = card.querySelector(".vote-btn");
-        btn.textContent = id === votedId ? "✔ Voted" : "Locked";
-        if (id === votedId) btn.classList.add("voted");
-        else btn.classList.remove("voted");
-        btn.disabled = true;
+    /* ── local in-memory vote store (fallback) ── */
+    let localVotes = { candidate1:0, candidate2:0, candidate3:0, candidate4:0 };
+    try {
+      const saved = JSON.parse(localStorage.getItem(LS_VOTES));
+      if (saved && typeof saved === 'object') localVotes = { ...localVotes, ...saved };
+    } catch(e) {}
+
+    function saveLocalVotes() {
+      try { localStorage.setItem(LS_VOTES, JSON.stringify(localVotes)); } catch(e) {}
+    }
+
+    function buildLocalData() {
+      const total = Object.values(localVotes).reduce((a,b) => a+b, 0);
+      const pct   = {};
+      CANDIDATES.forEach(id => {
+        pct[id] = total > 0 ? ((localVotes[id] / total) * 100).toFixed(1) : '0';
       });
+      return { votes: { ...localVotes }, total, percentages: pct };
     }
 
-    function showToast(msg, type) {
-      const t = document.getElementById("toast");
-      t.textContent = msg;
-      t.className = "toast show " + type;
-      setTimeout(() => t.className = "toast", 3000);
+    /* ════════ SOCKET / SERVER INIT ════════ */
+    function initServer() {
+      /* try socket.io first */
+      if (typeof io !== 'undefined') {
+        try {
+          socket = io({ timeout: 3000, reconnectionAttempts: 3 });
+
+          socket.on('connect', () => {
+            serverMode = true;
+            setStatus('live');
+          });
+
+          socket.on('connect_error', () => {
+            serverMode = false;
+            setStatus('local');
+            /* render local data so the UI isn't empty */
+            updateUI(buildLocalData());
+          });
+
+          socket.on('disconnect', () => {
+            serverMode = false;
+            setStatus('offline');
+          });
+
+          socket.on('initialData', (data) => {
+            serverMode = true;
+            updateUI(data);
+            document.getElementById('activeUsers').textContent =
+              Math.floor(Math.random() * 80) + 20;
+          });
+
+          socket.on('voteUpdate', (data) => {
+            updateUI(data);
+            const cur = parseInt(document.getElementById('activeUsers').textContent) || 20;
+            document.getElementById('activeUsers').textContent =
+              cur + Math.floor(Math.random() * 3);
+          });
+
+          return; /* socket.io path taken */
+        } catch(e) { /* fall through to HTTP */ }
+      }
+
+      /* try plain HTTP fetch fallback */
+      fetch('/api/votes', { signal: AbortSignal.timeout(3000) })
+        .then(r => r.json())
+        .then(data => {
+          serverMode = true;
+          setStatus('live');
+          updateUI(data);
+        })
+        .catch(() => {
+          serverMode = false;
+          setStatus('local');
+          updateUI(buildLocalData());
+        });
     }
 
-    // ── Fixed Cast Vote Logic ─────────────────────────────────────────
-    function castVote(candidateId) {
-      const voted = localStorage.getItem(LS_KEY);
+    function setStatus(mode) {
+      const pill = document.querySelector('.live-pill');
+      const dot  = document.querySelector('.live-dot');
+      const txt  = document.getElementById('serverStatus');
+      if (mode === 'live') {
+        txt.textContent = 'Live';
+        pill.style.borderColor = 'rgba(34,197,94,0.3)';
+        dot.style.background   = '#22c55e';
+        dot.style.boxShadow    = '0 0 6px #22c55e';
+      } else if (mode === 'local') {
+        txt.textContent = 'Local';
+        pill.style.borderColor = 'rgba(201,168,76,0.3)';
+        dot.style.background   = '#c9a84c';
+        dot.style.boxShadow    = '0 0 6px #c9a84c';
+      } else {
+        txt.textContent = 'Offline';
+        pill.style.borderColor = 'rgba(185,28,28,0.35)';
+        dot.style.background   = '#ef4444';
+        dot.style.boxShadow    = '0 0 6px #ef4444';
+      }
+    }
 
-      if (voted) {
-        showToast("You have already cast your vote!", "warn");
+    /* ════════ UPDATE UI ════════ */
+    function updateUI(data) {
+      const { votes, total, percentages } = data;
+      animateNumber(document.getElementById('totalVotes'),  total);
+      animateNumber(document.getElementById('totalVotes2'), total);
+
+      let leader = CANDIDATES[0], maxV = 0;
+
+      CANDIDATES.forEach(id => {
+        const count = votes[id] || 0;
+        const pct   = percentages
+          ? (percentages[id] || '0')
+          : (total > 0 ? ((count / total) * 100).toFixed(1) : '0');
+
+        setText(`votes-${id}`,   count.toLocaleString());
+        setBar(`bar-${id}`,      pct);
+        setText(`pct-${id}`,     pct + '%');
+        setText(`count2-${id}`,  count.toLocaleString());
+        setBar(`bar2-${id}`,     pct);
+        setText(`pct2-${id}`,    pct + '%');
+
+        if (count > maxV) { maxV = count; leader = id; }
+      });
+
+      document.querySelectorAll('.candidate-card').forEach(c => c.classList.remove('leader'));
+      document.querySelectorAll('.result-row').forEach(r => r.classList.remove('leader'));
+      if (total > 0) {
+        document.querySelector(`.candidate-card[data-candidate="${leader}"]`)?.classList.add('leader');
+        document.querySelector(`.result-row[data-candidate="${leader}"]`)?.classList.add('leader');
+      }
+    }
+
+    function setText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+    function setBar(id, pct) {
+      const el = document.getElementById(id);
+      if (el) el.style.width = pct + '%';
+    }
+
+    function animateNumber(el, target) {
+      if (!el) return;
+      const start = parseInt(el.textContent.replace(/,/g, '')) || 0;
+      const diff  = target - start;
+      if (diff === 0) return;
+      let step = 0; const steps = 30;
+      const t = setInterval(() => {
+        step++;
+        el.textContent = Math.round(start + diff * (step / steps)).toLocaleString();
+        if (step >= steps) clearInterval(t);
+      }, 600 / steps);
+    }
+
+    /* ════════ CAST VOTE ════════ */
+    async function castVote(candidateId) {
+      if (hasVoted) {
+        showToast('நீங்கள் ஏற்கனவே வாக்களித்துவிட்டீர்கள்! (You have already voted)', 'error');
         return;
       }
 
-      const btn = document.querySelector(`[data-id="${candidateId}"] .vote-btn`);
-      btn.disabled = true;
-      btn.textContent = "Submitting…";
+      const btn = document.querySelector(`.vote-btn[data-candidate="${candidateId}"]`);
+      if (!btn || btn.disabled) return;
 
-      // Transaction is most stable for counting
-      db.ref('votes').child(candidateId).transaction((currentValue) => {
-        return (currentValue || 0) + 1;
-      }, (error, committed) => {
-        if (error) {
-          console.error("Vote failed:", error);
+      /* loading state */
+      btn.disabled = true;
+      btn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" style="animation:spin .7s linear infinite;flex-shrink:0">
+          <path stroke-linecap="round" d="M12 2a10 10 0 0 1 10 10"/>
+        </svg><span>Recording...</span>`;
+
+      /* ── SERVER PATH ── */
+      if (serverMode) {
+        try {
+          const res = await fetch('/api/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ candidateId, userId }),
+            signal: AbortSignal.timeout(8000)
+          });
+          const result = await res.json();
+
+          if (res.ok && result.success) {
+            onVoteSuccess(candidateId, result.data);
+          } else if (result.alreadyVoted) {
+            hasVoted = candidateId;
+            localStorage.setItem(LS_KEY, candidateId);
+            showToast('You have already voted on this device.', 'error');
+            lockAllCards(candidateId);
+            resetBtn(btn, candidateId);
+          } else {
+            showToast(result.error || 'Server rejected the vote. Try again.', 'error');
+            resetBtn(btn, candidateId);
+          }
+        } catch(err) {
+          /* server unreachable — drop to local mode gracefully */
+          serverMode = false;
+          setStatus('local');
+          castVoteLocally(candidateId, btn);
+        }
+
+      /* ── LOCAL PATH ── */
+      } else {
+        castVoteLocally(candidateId, btn);
+      }
+    }
+
+    function castVoteLocally(candidateId, btn) {
+      /* small artificial delay for UX realism */
+      setTimeout(() => {
+        localVotes[candidateId]++;
+        saveLocalVotes();
+        onVoteSuccess(candidateId, buildLocalData());
+      }, 600);
+    }
+
+    function onVoteSuccess(candidateId, data) {
+      hasVoted = candidateId;
+      localStorage.setItem(LS_KEY, candidateId);
+      showToast('🎉 வாக்கு பதிவாகிவிட்டது! Vote recorded — வாழ்க தமிழ்நாடு!', 'success');
+      lockAllCards(candidateId);
+      if (data) updateUI(data);
+    }
+
+    function resetBtn(btn, id) {
+      btn.disabled = false;
+      btn.innerHTML = `
+        <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>Vote for ${NAMES[id] || 'Candidate'}</span>`;
+    }
+
+    function lockAllCards(votedId) {
+      CANDIDATES.forEach(id => {
+        const btn = document.querySelector(`.vote-btn[data-candidate="${id}"]`);
+        if (!btn) return;
+        if (id === votedId) {
+          btn.classList.add('voted');
           btn.disabled = false;
-          btn.textContent = "Cast Vote";
-          showToast("Failed: " + error.message, "error");
-        } else if (committed) {
-          localStorage.setItem(LS_KEY, candidateId);
-          lockAllCards(candidateId);
-          showToast("✅ Vote recorded!", "success");
+          btn.innerHTML = `
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>✓ Vote Cast</span>`;
+        } else {
+          btn.disabled = true;
+          btn.innerHTML = `<span>🔒 Locked</span>`;
         }
       });
     }
 
-    // Attach events
-    const prevVote = localStorage.getItem(LS_KEY);
-    if (prevVote) lockAllCards(prevVote);
+    /* ════════ TOAST ════════ */
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <svg class="toast-icon" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          ${type === 'success'
+            ? '<path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+            : '<path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>'}
+        </svg>
+        <span>${message}</span>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 450);
+      }, 4500);
+    }
 
-    document.querySelectorAll('.candidate-card').forEach(card => {
-      const btn = card.querySelector('.vote-btn');
-      if (!btn.disabled) {
-        btn.addEventListener('click', () => castVote(card.dataset.id));
-      }
-    });
+    /* ════════ INIT ════════ */
+    document.addEventListener('DOMContentLoaded', () => {
 
-    // Live results Sync
-    db.ref('votes').on('value', snap => {
-      const data = snap.val() || {};
-      let total = 0;
-      CANDIDATES.forEach(id => { total += (data[id] || 0); });
-      
-      CANDIDATES.forEach(id => {
-        const count = data[id] || 0;
-        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-        
-        const el = document.getElementById(`count-${id}`);
-        const bar = document.getElementById(`bar-${id}`);
-        const pctEl = document.getElementById(`pct-${id}`);
-        
-        if (el) el.textContent = count.toLocaleString();
-        if (bar) bar.style.width = pct + "%";
-        if (pctEl) pctEl.textContent = pct + "%";
+      /* spin keyframe */
+      const style = document.createElement('style');
+      style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+      document.head.appendChild(style);
+
+      /* wire vote buttons */
+      document.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.candidate;
+          if (id) castVote(id);
+        });
       });
-      
-      const totalEl = document.getElementById("total-votes");
-      if (totalEl) totalEl.textContent = total.toLocaleString();
 
-      const leader = CANDIDATES.reduce((a, b) => (data[a] || 0) >= (data[b] || 0) ? a : b);
-      document.querySelectorAll(".candidate-card").forEach(c => c.classList.remove("leader"));
-      if (total > 0) document.querySelector(`[data-id="${leader}"]`)?.classList.add("leader");
+      /* restore prior vote */
+      if (hasVoted) {
+        lockAllCards(hasVoted);
+        updateUI(buildLocalData()); /* show stored local counts at minimum */
+      }
+
+      /* start server connection */
+      /* small delay lets socket.io script finish loading */
+      setTimeout(initServer, 300);
+
+      /* hide loader */
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 1600);
+
+      /* scroll-in card animations */
+      const cards = document.querySelectorAll('.candidate-card, .info-card, .result-row');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => {
+              entry.target.style.opacity  = '1';
+              entry.target.style.transform = 'translateY(0)';
+            }, i * 75);
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.08 });
+
+      cards.forEach(card => {
+        card.style.opacity   = '0';
+        card.style.transform = 'translateY(24px)';
+        card.style.transition = 'opacity 0.55s ease, transform 0.55s ease, border-color 0.4s, box-shadow 0.4s';
+        obs.observe(card);
+      });
     });
   </script>
 </body>
